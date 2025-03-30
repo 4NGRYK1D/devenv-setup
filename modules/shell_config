@@ -1,0 +1,267 @@
+#!/usr/bin/env bash
+#
+# DevEnvSetup - Shell Configuration Module
+# This module handles shell installation and configuration
+
+# Function to set up shell configuration
+function setup_shell() {
+    log "INFO" "Setting up shell configuration..."
+    
+    # Install Zsh if enabled
+    if [[ "${INSTALL_ZSH}" == true ]]; then
+        install_zsh
+    fi
+    
+    # Set up Bash aliases if enabled
+    if [[ "${SETUP_BASH_ALIASES}" == true ]]; then
+        setup_bash_aliases
+    fi
+    
+    # Set up Bash prompt if enabled
+    if [[ "${SETUP_BASH_PROMPT}" == true ]]; then
+        setup_bash_prompt
+    fi
+    
+    log "SUCCESS" "Shell configuration completed successfully"
+    return 0
+}
+
+# Function to install Zsh
+function install_zsh() {
+    log "INFO" "Setting up Zsh..."
+    
+    # Check if Zsh is already installed
+    if check_command zsh; then
+        log "INFO" "Zsh is already installed"
+    else
+        log "INFO" "Zsh not found. Installing Zsh..."
+        
+        if [[ "${DRY_RUN}" != true ]]; then
+            case "${OS}" in
+                linux)
+                    case "${DISTRO}" in
+                        debian)
+                            sudo apt-get update
+                            sudo apt-get install -y zsh || {
+                                log "ERROR" "Failed to install Zsh"
+                                return 1
+                            }
+                            ;;
+                            
+                        redhat)
+                            if check_command dnf; then
+                                sudo dnf install -y zsh || {
+                                    log "ERROR" "Failed to install Zsh"
+                                    return 1
+                                }
+                            else
+                                sudo yum install -y zsh || {
+                                    log "ERROR" "Failed to install Zsh"
+                                    return 1
+                                }
+                            fi
+                            ;;
+                            
+                        *)
+                            log "ERROR" "Unsupported Linux distribution: ${DISTRO}"
+                            return 1
+                            ;;
+                    esac
+                    ;;
+                    
+                macos)
+                    brew install zsh || {
+                        log "ERROR" "Failed to install Zsh"
+                        return 1
+                    }
+                    ;;
+                    
+                *)
+                    log "ERROR" "Unsupported operating system: ${OS}"
+                    return 1
+                    ;;
+            esac
+        fi
+    fi
+    
+    # Verify Zsh installation
+    if [[ "${DRY_RUN}" != true ]]; then
+        log "INFO" "Verifying Zsh installation..."
+        
+        if ! zsh --version; then
+            log "ERROR" "Zsh installation verification failed"
+            return 1
+        fi
+        
+        # Set Zsh as default shell if requested
+        if [[ "${DEFAULT_SHELL}" == "zsh" ]]; then
+            chsh -s "$(which zsh)" || {
+                log "ERROR" "Failed to set Zsh as default shell"
+                return 1
+            }
+            log "INFO" "Zsh set as default shell. Please log out and log back in for changes to take effect."
+        fi
+        
+        # Install Oh My Zsh if it doesn't exist
+        if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then
+            log "INFO" "Installing Oh My Zsh..."
+            sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || {
+                log "ERROR" "Failed to install Oh My Zsh"
+                return 1
+            }
+        fi
+    fi
+    
+    log "SUCCESS" "Zsh setup completed successfully"
+    return 0
+}
+
+# Function to set up Bash aliases
+function setup_bash_aliases() {
+    log "INFO" "Setting up Bash aliases..."
+    
+    if [[ "${DRY_RUN}" != true ]]; then
+        # Create .bash_aliases file if it doesn't exist
+        if [[ ! -f "${HOME}/.bash_aliases" ]]; then
+            log "INFO" "Creating .bash_aliases file..."
+            
+            # Create basic aliases
+            cat > "${HOME}/.bash_aliases" << 'EOF'
+# Navigation aliases
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+alias ~="cd ~"
+
+# File operations
+alias l="ls -lah"
+alias ll="ls -lh"
+alias la="ls -lAh"
+alias cp="cp -i"
+alias mv="mv -i"
+alias rm="rm -i"
+alias mkdir="mkdir -p"
+alias df="df -h"
+alias du="du -h"
+
+# Grep with color
+alias grep="grep --color=auto"
+alias fgrep="fgrep --color=auto"
+alias egrep="egrep --color=auto"
+
+# Git aliases
+alias gs="git status"
+alias gc="git commit"
+alias gp="git push"
+alias gl="git pull"
+alias gd="git diff"
+alias ga="git add"
+alias gco="git checkout"
+alias gb="git branch"
+alias gl="git log --graph --decorate --pretty=oneline --abbrev-commit --all"
+
+# System shortcuts
+alias update="sudo apt update && sudo apt upgrade -y"
+alias install="sudo apt install"
+alias remove="sudo apt remove"
+alias ports="netstat -tulanp"
+alias meminfo="free -m -l -t"
+alias cpuinfo="lscpu"
+alias diskinfo="df -h"
+alias myip="curl http://ipecho.net/plain; echo"
+
+# File find
+alias ff="find . -type f -name"
+alias fd="find . -type d -name"
+
+# Utility
+alias h="history"
+alias j="jobs -l"
+alias path="echo -e ${PATH//:/\\n}"
+alias now="date +\"%T\""
+alias today="date +\"%Y-%m-%d\""
+alias vi="vim"
+alias edit="$EDITOR"
+alias _="sudo"
+
+# Development shortcuts
+alias py="python3"
+alias ipy="ipython"
+alias serve="python3 -m http.server"
+alias npmls="npm list -g --depth=0"
+alias npms="npm start"
+alias npmt="npm test"
+alias npmi="npm install"
+EOF
+            
+            # Source aliases in .bashrc if not already there
+            if ! grep -q ". ~/.bash_aliases" "${HOME}/.bashrc"; then
+                echo "# Load aliases if file exists" >> "${HOME}/.bashrc"
+                echo "if [ -f ~/.bash_aliases ]; then" >> "${HOME}/.bashrc"
+                echo "    . ~/.bash_aliases" >> "${HOME}/.bashrc"
+                echo "fi" >> "${HOME}/.bashrc"
+            fi
+            
+            log "SUCCESS" "Created Bash aliases file at ${HOME}/.bash_aliases"
+        else
+            log "INFO" "Bash aliases file already exists at ${HOME}/.bash_aliases"
+        fi
+    fi
+    
+    log "SUCCESS" "Bash aliases setup completed successfully"
+    return 0
+}
+
+# Function to set up Bash prompt
+function setup_bash_prompt() {
+    log "INFO" "Setting up Bash prompt..."
+    
+    if [[ "${DRY_RUN}" != true ]]; then
+        # Create or append to .bashrc
+        local bashrc="${HOME}/.bashrc"
+        
+        # Check if prompt is already customized
+        if grep -q "PS1=" "${bashrc}"; then
+            log "INFO" "Bash prompt already customized in ${bashrc}"
+        else
+            log "INFO" "Setting up custom Bash prompt..."
+            
+            # Add custom prompt with Git branch display
+            cat >> "${bashrc}" << 'EOF'
+
+# Custom Bash prompt with Git branch display
+parse_git_branch() {
+    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+# Colors
+RESET="\[\033[0m\]"
+BLACK="\[\033[30m\]"
+RED="\[\033[31m\]"
+GREEN="\[\033[32m\]"
+YELLOW="\[\033[33m\]"
+BLUE="\[\033[34m\]"
+MAGENTA="\[\033[35m\]"
+CYAN="\[\033[36m\]"
+WHITE="\[\033[37m\]"
+BOLDBLACK="\[\033[1;30m\]"
+BOLDRED="\[\033[1;31m\]"
+BOLDGREEN="\[\033[1;32m\]"
+BOLDYELLOW="\[\033[1;33m\]"
+BOLDBLUE="\[\033[1;34m\]"
+BOLDMAGENTA="\[\033[1;35m\]"
+BOLDCYAN="\[\033[1;36m\]"
+BOLDWHITE="\[\033[1;37m\]"
+
+# Custom prompt
+PS1="${BOLDGREEN}\u@\h${RESET}:${BOLDBLUE}\w${RESET}${BOLDYELLOW}\$(parse_git_branch)${RESET} $ "
+EOF
+            
+            log "SUCCESS" "Custom Bash prompt configured in ${bashrc}"
+        fi
+    fi
+    
+    log "SUCCESS" "Bash prompt setup completed successfully"
+    return 0
+}
